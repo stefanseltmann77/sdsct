@@ -281,7 +281,6 @@ class ReportingSetBuilder(object):
         :param codeplan:
         """
         self.check_setup()
-
         table_column_names = self.db.query_table_column_names(self.database_table)
         for variable_name in variables_calculation:
             if variable_name not in table_column_names:
@@ -360,8 +359,7 @@ class ReportingSetBuilder(object):
                                                                                              tabdef_counter,
                                                                                              tabdef_count,
                                                                                              str(datetime.datetime.now() - start_time)))
-                import time
-                time.sleep(1)
+                self.filter_base = tabdef.filter_rs if tabdef.filter_rs else None
                 if tabdef.table_head:
                     self.result_subsplits = []      # TODO warum self, warum nicht local
                     for head in tabdef.table_head:
