@@ -7,7 +7,6 @@ __author__ = 's.seltmann'
 
 
 class TestCon2SQLite(TestCase):
-
     def setUp(self):
         self.db = con2sqlite(':memory:')
         self.db.query("CREATE TABLE testtable (id int, name CHAR); ")
@@ -121,4 +120,3 @@ class TestCon2SQLite(TestCase):
         self.db._output_streams = {self.db.OS_STDOUT}
         self.db.query("SELECT 1", is_meta=False)
         self.assertNotEqual("", console.getvalue())
-

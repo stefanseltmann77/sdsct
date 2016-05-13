@@ -218,14 +218,15 @@ class ReportingSetBuilder(object):
         if self.filter_base:
             filter_string = "({}) and ({})".format(filter_string, self.filter_base) if filter_string else self.filter_base
         if len(variables_calculation) == 1:
-            result, result_query_txt, county_query_txt = self.query_frequ_single(variables_calculation[0], filter_string)
-            result = self._transform_grouping(result)
+            result = self.database_table[variables_calculation[0]].astype('category').value_counts()
+            result_pc = result/sum(result)*100
+            keys = [str(key) for key in result.index]
+            result = dict(zip(keys, list(result)))
+            result_pc = dict(zip(keys, list(result_pc)))
+
             if result and result is not None:  # XXX why both
-                result = DataSet(result)
-                result.sql_result_str = result_query_txt
-            else:
-                result = DataSet()
-                result.sql_result_str = result_query_txt
+                result = DataSet({'COUNT': result, 'PCT': result_pc})
+
         else:
             result, result_query_txt, county_query_txt = self.query_frequ_multi(variables_calculation, filter_string)
             result = self._transform_grouping(result)
@@ -333,7 +334,7 @@ class ReportingSetBuilder(object):
                     rs['{}_{}'.format(result_split.variables[0], code)] = self._calc_frequencies(variables_calculation, filter_string_split)
                     rs.splits_sub[result_split.variables[0]] = copy.copy(result_split)
 
-    def compute_reportingsets_for_tabreportdef(self, tabreport_def: TabReportDef):
+    def compute_reportingsets_for_tabreportdef(self, tabreport_def: TabReportDef, source: str='database'):
         """Augment the definition of a table report with calculated ReportingSets."""
         start_time = datetime.datetime.now()
         tabdef_count = len(tabreport_def)
@@ -353,7 +354,6 @@ class ReportingSetBuilder(object):
                                                                            tabdef_count))
                 except FileNotFoundError:
                     logging.info("\t\t{} not found in cache.".format(tabdef_name))
-
             if not rs:
                 logging.info("\t\t{} is being calculated.\t\t{}/{}, \t\truntime: {} ".format(tabdef_name,
                                                                                              tabdef_counter,
@@ -390,3 +390,122 @@ class ReportingSetBuilder(object):
                     f.close()
             tabdef.reportingset = rs
         self.log_info("Tabreport calculated. Duration: {}".format(str(datetime.datetime.now() - start_time)))
+
+    def compute_reportingsets_for_tabreportdef_p(self, tabreport_def: TabReportDef, source: str = 'database'):
+        """Augment the definition of a table report with calculated ReportingSets."""
+        start_time = datetime.datetime.now()
+        tabdef_count = len(tabreport_def)
+        tabreport_def.fill_contents_inert()
+        tabdef_counter = 0
+        for tabdef_name in tabreport_def.tabdef_order:
+            tabdef = tabreport_def[tabdef_name]
+            tabdef_counter += 1
+            rs = None
+            if self._caching_enabled and self._caching_mode in ('r', 'rw'):
+                rs_dump = "{}/rs_{}.rsd".format(self._cache_directory, tabdef_name)
+                try:
+                    with open(rs_dump, 'rb') as f:
+                        rs = pickle.load(f)
+                    logging.info("\t\t{} has been loaded.\t\t{}/{}".format(tabdef_name,
+                                                                           tabdef_counter,
+                                                                           tabdef_count))
+                except FileNotFoundError:
+                    logging.info("\t\t{} not found in cache.".format(tabdef_name))
+            if not rs:
+                logging.info("\t\t{} is being calculated.\t\t{}/{}, \t\truntime: {} ".format(tabdef_name,
+                                                                                             tabdef_counter,
+                                                                                             tabdef_count,
+                                                                                             str(
+                                                                                                 datetime.datetime.now() - start_time)))
+                self.filter_base = tabdef.filter_rs if tabdef.filter_rs else None
+                if tabdef.table_head:
+                    self.result_subsplits = []  # TODO warum self, warum nicht local
+                    for head in tabdef.table_head:
+                        if isinstance(head, TabHead):
+                            for subhead in head:
+                                self.result_subsplits.append(subhead)
+                        elif isinstance(head, CodePlan):
+                            self.result_subsplits.append(head)
+                        else:
+                            raise TypeError('Only TabHead or CodePlan allowed as a table head. Found: ', type(head))
+                if tabdef.aggr_variables:
+                    self.variables_calculation_avg = tabdef.aggr_variables[0]  # unclear?
+                rs = self.build_rs_frequs_pandas(variables_calculation=tabdef.variables,
+                                          variables_calculation_avg=self.variables_calculation_avg)
+                if tabdef.split_main:
+                    rs.split_main = tabdef.split_main
+                    rs.split_main.variables = tabdef.variables
+                if tabdef.title:
+                    rs.title = tabdef.title
+                if tabdef.title_sub:
+                    rs.content_misc['subTitle'] = tabdef.title_sub
+                if self._caching_enabled and self._caching_mode in ('w', 'rw'):
+                    f = open("{}/rs_{}.rsd".format(self._cache_directory, tabdef_name), 'wb')
+                    pickle.dump(rs, f)
+                    f.close()
+            tabdef.reportingset = rs
+        self.log_info("Tabreport calculated. Duration: {}".format(str(datetime.datetime.now() - start_time)))
+
+    def build_rs_frequs_pandas(self, variables_calculation: list, filter_string: str = None,
+                        variables_calculation_avg: list = None, title: str = None,
+                        codeplan: CodePlan = None) -> ReportingSet:
+        """Build a reportingset based on frequencies.
+
+        :param variables_calculation:
+        :param filter_string:
+        :param variables_calculation_avg:
+        :param title:
+        :param codeplan:
+        """
+        table_column_names = self.database_table.columns
+        for variable_name in variables_calculation:
+            if variable_name not in table_column_names:
+                raise Exception("Variable '{}' not found in {}!".format(variable_name, self.database_table))
+        self.variables_calculation_avg = variables_calculation_avg  # XXX umbenennen
+        rs = ReportingSet(title=title)
+        rs['TOTAL'] = self._calc_frequencies(variables_calculation=variables_calculation, filter_string=filter_string)
+        if codeplan:
+            rs.split_main = codeplan
+            rs.split_main.key_order + [key for key in rs['TOTAL']['COUNT'] if key not in codeplan]  # # Add missing codes
+            keys_sorted = None
+        else:
+            if len(rs['TOTAL']) > 0:
+                rs.split_main.data = list(rs['TOTAL']['COUNT'].keys())
+                keys_sorted = None
+                if self.order_freq_desc:
+                    keys_sorted = sorted(copy.copy(rs['TOTAL']['COUNT']).items(), key=operator.itemgetter(1))
+                    keys_sorted.reverse()
+                    rs.split_main.key_order = [chunk[0] for chunk in keys_sorted]
+                    if 'OTHER' in rs.split_main.key_order:
+                        rs.split_main.key_order.remove('OTHER')
+                        rs.split_main.key_order.append('OTHER')
+                rs.split_main.variables = variables_calculation
+        if self.result_subsplits:
+            self.calc_splits_sub(rs, filter_string, variables_calculation)
+        rs.timestamp = datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+        return rs
+
+
+    def _calc_frequencies_p(self, variables_calculation, filter_string=None):
+        """dispatch required variables to adequate frequ function"""
+        if self.filter_base:
+            filter_string = "({}) and ({})".format(filter_string, self.filter_base) if filter_string else self.filter_base
+        if len(variables_calculation) == 1:
+            result, result_query_txt, county_query_txt = self.query_frequ_single(variables_calculation[0], filter_string)
+            result = self._transform_grouping(result)
+            if result and result is not None:  # XXX why both
+                result = DataSet(result)
+                result.sql_result_str = result_query_txt
+            else:
+                result = DataSet()
+                result.sql_result_str = result_query_txt
+        else:
+            result, result_query_txt, county_query_txt = self.query_frequ_multi(variables_calculation, filter_string)
+            result = self._transform_grouping(result)
+            if result and result is not None:  # XXX why both
+                result = DataSet(result)
+                result.sql_result_str = result_query_txt
+            else:
+                result = DataSet()
+                result.sql_result_str = result_query_txt
+        return result
