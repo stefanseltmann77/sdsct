@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from sdsct.dbinterfaces.Python2Database import Python2Database
+from sdsct.dbinterfaces.con2database import Con2Database
 import sqlite3
 
-class Python2SQLite(Python2Database):
+class con2sqlite(Con2Database):
     """Basic class for access to a sqlite-database."""
 
     def __init__(self, database=None):
-        super(Python2SQLite, self).__init__()
+        super(con2sqlite, self).__init__()
         if database:
             self.connect(database)
 

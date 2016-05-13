@@ -1,15 +1,15 @@
 import io
 import sys
 from unittest import TestCase
-from sdsct.dbinterfaces.Python2SQLite import Python2SQLite
+from sdsct.dbinterfaces.con2sqlite import con2sqlite
 
 __author__ = 's.seltmann'
 
 
-class TestPython2SQLite(TestCase):
+class TestCon2SQLite(TestCase):
 
     def setUp(self):
-        self.db = Python2SQLite(':memory:')
+        self.db = con2sqlite(':memory:')
         self.db.query("CREATE TABLE testtable (id int, name CHAR); ")
         self.db.query("SELECT * FROM testtable")
         self.db.query("INSERT INTO testtable (id, name) values (1, 'one')")
