@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import sys
 import mysql.connector
-from .Python2Mysql import Python2Mysql
-from .Python2Database import SqlResultTable
+from .con2mysql import con2mysql
+from .con2database import SqlResultTable
 
 
-class Python2Mysql_Oracle(Python2Mysql):
+class Con2MysqlOracle(con2mysql):
     """Basic class for access to a MySql-database using the genuine Oracle driver."""
 
     def connect(self, host, user, passwd='', db='', port=3306):
@@ -26,7 +26,7 @@ class Python2Mysql_Oracle(Python2Mysql):
         self._cursor.execute("SET NAMES 'utf8'")  # TODO: cursor-methoden verwenden
         self._cursor.execute("SET CHARACTER SET 'utf8'")  # TODO: cursor-methoden verwenden
 
-    def insert_row(self, table_name: str, params, echo: bool=None, mode: int=Python2Mysql.IM_INSERT, debug: bool=False,
+    def insert_row(self, table_name: str, params, echo: bool=None, mode: int=con2mysql.IM_INSERT, debug: bool=False,
                    column_names: tuple=None):
         """Insert a single row into the given table based on a dictionary.
 
@@ -44,9 +44,9 @@ class Python2Mysql_Oracle(Python2Mysql):
                     query_txt = " INTO  {} ({}) \n\tVALUES ({})".format(table_name,
                                                                         ','.join(['`{}`'.format(name) for name in column_names]),
                                                                         ','.join(['%s' for value in params]))
-                    if mode == Python2Mysql.IM_INSERT:
+                    if mode == con2mysql.IM_INSERT:
                         return self._execute_query('INSERT' + query_txt, echo=echo, params=params, is_meta=False)
-                    elif mode == Python2Mysql.IM_REPLACE:
+                    elif mode == con2mysql.IM_REPLACE:
                         return self._execute_query('REPLACE' + query_txt, echo=echo, params=params)
                     else:
                         raise Exception ('wrong insert mode. Only "insert" or "replace" allowed!')
@@ -55,9 +55,9 @@ class Python2Mysql_Oracle(Python2Mysql):
             else:
                 insert_array = {key: params[key] for key in params.keys() if params[key] != None} #clean empty keys
                 query_txt = " INTO  {} ({}) \n\tVALUES ({})".format(table_name, ','.join(['`' + key + '`' for key in insert_array.keys()]), ','.join(["%({})s".format(key) for key in insert_array]))
-                if mode == Python2Mysql.IM_INSERT:
+                if mode == con2mysql.IM_INSERT:
                     return self._execute_query('INSERT' + query_txt, echo=echo, params=insert_array, is_meta=False)
-                elif mode == Python2Mysql.IM_REPLACE:
+                elif mode == con2mysql.IM_REPLACE:
                     return self._execute_query('REPLACE' + query_txt, echo=echo, params=insert_array, is_meta=False)
                 else:
                     raise Exception ('wrong insert mode. Only "insert" or "replace" allowed!')

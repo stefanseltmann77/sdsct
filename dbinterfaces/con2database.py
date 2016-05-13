@@ -7,7 +7,7 @@ from io import StringIO
 from abc import ABCMeta, abstractmethod
 
 
-class Python2Database(object):
+class Con2Database(object):
     """Basic declarative wrapper for database access.
 
     Must be derived for DB-specific adapters. The goal of this wrapper is

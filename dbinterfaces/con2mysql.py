@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import codecs
-from sdsct.dbinterfaces.Python2Database import Python2Database
+from sdsct.dbinterfaces.con2database import Con2Database
 from abc import ABCMeta, abstractmethod
 
 
-class Python2Mysql(Python2Database): #XXX abstract class
+class con2mysql(Con2Database): #XXX abstract class
     __metaclass__ = ABCMeta
     """Basic class for access to a MySql-database."""
     
@@ -42,14 +42,6 @@ class Python2Mysql(Python2Database): #XXX abstract class
     ###XXX decorator für tablename check einbaucen
     def query_tableColumns(self, tableName):
         return self.query_result("SELECT * FROM information_schema.`COLUMNS` WHERE table_schema = %s and table_name = %s", values= tableName.split('.'))
-
-    def query_tableColumnNames(self, tableName):
-        raise DeprecationWarning
-        try:
-            schema, table = tableName.split('.')
-        except ValueError:
-            raise Exception('Please provide the table name complete with its schema, e.g. schema.table!')
-        return self.query_list("SELECT column_name FROM information_schema.`COLUMNS` WHERE table_schema = %s and table_name = %s", values=(schema, table))
 
     def schema_exists(self, schemaName):
         """Checks the existence of a schema in the metadata of the db-server"""

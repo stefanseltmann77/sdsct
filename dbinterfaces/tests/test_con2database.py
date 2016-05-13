@@ -1,13 +1,13 @@
 from unittest import TestCase
-from sdsct.dbinterfaces.Python2SQLite import Python2SQLite
+from sdsct.dbinterfaces.con2sqlite import con2sqlite
 
 __author__ = 's.seltmann'
 
 
-class TestPython2Database(TestCase):
+class TestCon2Database(TestCase):
 
   def setUp(self):
-      self.db = Python2SQLite(database=':memory:')
+      self.db = con2sqlite(database=':memory:')
 
   def test_connect(self):
     self.fail()

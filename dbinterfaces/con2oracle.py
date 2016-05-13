@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from sdsct.dbinterfaces.Python2Database import Python2Database
+from sdsct.dbinterfaces.con2database import Con2Database
 import cx_Oracle
 
-class Python2Oracle(Python2Database):
+class Python2Oracle(Con2Database):
     def connect (self, user=None, password=None, dsn=None, host=None, port=None, sid=None):
         """Start the connection to a DataBase.
         Keyword arguments:
