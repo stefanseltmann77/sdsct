@@ -3,7 +3,7 @@ from sdsct.ubiquitousreporting.dataobjects.report_generic import CodePlan
 from sdsct.ubiquitousreporting.dataobjects.report_tab import TabHead
 from sdsct.ubiquitousreporting.dataobjects.report_tab import TabReportDef
 from sdsct.ubiquitousreporting.dataobjects.report_tab import TabDef
-from sdsct.ubiquitousreporting.exportadapter.ReportingSet2ExportFormat import ReportingSet2ExportFormat
+from sdsct.ubiquitousreporting.exportadapter.reportingset2export import ReportingSet2Export
 import openpyxl
 from openpyxl.workbook import Workbook
 import logging

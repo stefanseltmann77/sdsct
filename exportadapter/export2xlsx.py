@@ -6,7 +6,7 @@ from openpyxl import Workbook
 from sdsct.exportadapter.Python2Exportfile import Python2Exportfile
 
 
-class Python2xlsx(Python2Exportfile):
+class Export2xlsx(Python2Exportfile):
 
     def export(self, result, file_name: str="pythonexport.exp", result_title: str='table'):
         """
