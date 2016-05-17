@@ -3,13 +3,13 @@ from unittest import TestCase
 
 __author__ = 's.seltmann'
 
-from sdsct.ubiquitousreporting.exportadapter.ReportingSet2ExportFormat import ReportingSet2ExportFormat
+from sdsct.ubiquitousreporting.exportadapter.reportingset2export import ReportingSet2Export
 
 
 class TestReportingSet2ExportFormat(TestCase):
 
     def setUp(self):
-        self.RSE = ReportingSet2ExportFormat('c:/')
+        self.RSE = ReportingSet2Export('c:/')
 
     def test_decimals_in_valid_range(self):
         self.RSE.decimals = 1
@@ -33,14 +33,14 @@ class TestReportingSet2ExportFormat(TestCase):
         self.assertEqual(self.RSE.output_directory, 'c:/')
 
     def test_directory_always_without_end_sep(self):
-        self.RSE.output_directory = 'c:/test/'
-        self.assertEqual(self.RSE.output_directory, 'c:/test')
-        self.RSE.output_directory = 'c:/test'
-        self.assertEqual(self.RSE.output_directory, 'c:/test')
-        self.RSE.output_directory = 'c:\\test'
-        self.assertEqual(self.RSE.output_directory, 'c:/test')
-        self.RSE.output_directory = 'c:\\test\\'
-        self.assertEqual(self.RSE.output_directory, 'c:/test')
+        self.RSE.output_directory = 'c:/windows/'
+        self.assertEqual(self.RSE.output_directory, 'c:/windows')
+        self.RSE.output_directory = 'c:/windows'
+        self.assertEqual(self.RSE.output_directory, 'c:/windows')
+        self.RSE.output_directory = 'c:\\windows'
+        self.assertEqual(self.RSE.output_directory, 'c:/windows')
+        self.RSE.output_directory = 'c:\\windows\\'
+        self.assertEqual(self.RSE.output_directory, 'c:/windows')
 
     def test_non_existing_path(self):
         self.assertRaises(Exception, self.RSE.output_directory, 'A:\test')

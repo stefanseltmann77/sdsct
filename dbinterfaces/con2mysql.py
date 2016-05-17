@@ -146,7 +146,7 @@ class MYSQL_DBTable(object):
 
     def truncate(self, affirmation=False, echo=True):
         if affirmation==False:
-            self.db.query('TRUNCATE `{}`.`{}`'.format(self.schemaName,self.tableName), echo=echo);
+            self.db.query('TRUNCATE `{}`.`{}`'.format(self.schemaName,self.tableName), echo=echo)
 
     def insert_row(self, data, echo=False):
         self.db.insert_row(self.tableName, data, echo)

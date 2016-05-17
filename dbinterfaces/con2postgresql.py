@@ -70,6 +70,9 @@ class Con2PostgreSQL(Con2Database):
             self.query("DROP TABLE IF EXISTS " + table_name)
             return True
 
+    def insert_row(self, table_name: str, data, echo: bool = None, mode: int = Con2Database.IM_INSERT) -> None:
+        raise NotImplemented()
+
     def insert_rows(self, table_name: str, rows, echo: bool = None, mode: int = Con2Database.IM_INSERT) -> None:
         """Insert multiple rows into the given table based on a list or tuple of dictionaries or named tuples.
 
@@ -82,4 +85,3 @@ class Con2PostgreSQL(Con2Database):
 
     def _resolve_params_for_output(self, sql_txt: str, params):
         return self._cursor.mogrify(sql_txt, params).decode("utf-8")
-

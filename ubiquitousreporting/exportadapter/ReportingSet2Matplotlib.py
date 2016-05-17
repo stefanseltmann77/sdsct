@@ -748,7 +748,7 @@ class ReportingSet2MatLibPlot(object):
           plt = self.plt
           fig = plt.figure()
           fig.set_size_inches(self.sizeInch())
-          print self.padding2axes(self.chartPadding)
+          print(self.padding2axes(self.chartPadding))
           ax = fig.add_axes(self.padding2axes(self.chartPadding))
     
           fracs = []
@@ -757,7 +757,6 @@ class ReportingSet2MatLibPlot(object):
                     fracs.append(rs.dataSets[0].data['PCT_W'][key])
                     #autopct='%1.f%%', 
           wedges = ax.pie(fracs, colors=self.colors)
-          print "sfsd"
           ax2 = fig.add_axes([0.3, 0.2, 0.4, 0.4])
     
           fracs = []

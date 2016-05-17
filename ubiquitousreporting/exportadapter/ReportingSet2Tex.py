@@ -9,7 +9,7 @@ import sys
 from sdsct.ubiquitousreporting.dataobjects.report_generic import CodePlan
 from sdsct.ubiquitousreporting.dataobjects.report_generic import ReportingSet
 from sdsct.ubiquitousreporting.dataobjects.report_tab import TabHead, TabReportDef
-from sdsct.ubiquitousreporting.exportadapter.ReportingSet2ExportFormat import ReportingSet2ExportFormat
+from sdsct.ubiquitousreporting.exportadapter.reportingset2export import ReportingSet2Export
 
 
 class TexPage(object):
@@ -43,7 +43,7 @@ class TexTableReport(object):
 """
 
 
-class ReportingSet2Tex(ReportingSet2ExportFormat):
+class ReportingSet2Tex(ReportingSet2Export):
     def __init__(self, output_directory: str):
         super(ReportingSet2Tex, self).__init__(output_directory)
         self._display_label = 'label'  # # 'label', 'both', 'code'

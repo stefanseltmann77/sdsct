@@ -16,7 +16,7 @@ class ETLWrapper(object):
 
     @staticmethod
     def _parse_date(date_string):
-        """Converts a unix datestring, e.g. '2015-03-02' to a date object.
+        """Converts a unix date string, e.g. '2015-03-02' to a date object.
 
         :param date_string:
         :type date_string: str
