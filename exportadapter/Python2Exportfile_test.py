@@ -12,16 +12,18 @@ class Python2ExportfileTest(unittest.TestCase):
 
     def test_sensible_exception_when_exporting_without_outputDir(self):
         obj = Python2Exportfile()
-        self.assertRaises(TypeError, self.obj.export, 'Ergebnis')
+        self.assertRaises(TypeError, self.obj.export, 'Result')
 
     def test_setting_of_outputDir_with_open_ending(self):
         self.obj.output_directory = self.output_directory
         self.assertEqual(self.obj.output_directory, self.outputDirFormated)
 
-    def test_setting_of_outputDir_with_closed_ending(self):
+    def test_setting_of_outputDir_with_closed_ending(se lf):
         self.obj.output_directory = self.output_directory + '\\'
         self.assertEqual(self.obj.output_directory, self.outputDirFormated)
-    
+
+
+
     def test_export_of_string(self):
         self.obj.export('This is a \n dummystring', output_directory='c:/')
     
