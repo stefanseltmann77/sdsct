@@ -97,6 +97,9 @@ class CodePlan(dict):
                 if str(key) not in self:
                     raise Exception("Codeplan '{}' misses elements from key_order! Key : {} \n!".format(self.title, str(key)))
 
+    def __str__(self):
+        return str(self.__dict__) + '\n\n' + str(self.items())
+
 
 class DataSet(dict):
     """
