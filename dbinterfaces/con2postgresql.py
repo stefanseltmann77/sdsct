@@ -8,7 +8,18 @@ class Con2PostgreSQL(Con2Database):
     
     DEFAULT_PORT = 5432
 
-    def connect(self, dsn=None, user='', password='', host='', database='', port=DEFAULT_PORT):
+    def connect(self, dsn: str = None,
+                user: str = None, password: str = None,
+                host: str = None, database: str = None, port: int = DEFAULT_PORT) -> None:
+        """Establish a connection to a database
+
+        :param dsn: complete dsn string or name
+        :param user: username
+        :param password: password for username
+        :param host: ip or address of host
+        :param database: name of database schema
+        :param port: port if not default port of db application
+        """
         self.conn = psycopg2.connect(host=host, user=user, password=password, database=database, port=port)
         self._cursor = self.conn.cursor() 
 
@@ -28,11 +39,10 @@ class Con2PostgreSQL(Con2Database):
             """, params=(schema_name,), echo=False, is_meta=True)
 
     def query_schema_current(self) -> str:
-        """Return name of current selected schema/database as a string
-        """
+        """Query name of current schema or database"""
         return self.query_value('SELECT current_schema()', echo=False, is_meta=True)
 
-    def query_table_column_names(self, table_name: str, schema_name: str=None) -> list:
+    def query_table_column_names(self, table_name: str, schema_name: str = None) -> list:
         """Query the names of all columns of a table.
 
         If the schema name is provided in different ways, this priority will be used:
@@ -51,14 +61,15 @@ class Con2PostgreSQL(Con2Database):
                     UPPER(table_name)   = UPPER(%(table_name)s)
                 and UPPER(table_schema) = UPPER(%(schema_name)s)
             ORDER BY ordinal_position """,
-                               params=dict(table_name=table_name, schema_name=schema_name), echo=False, is_meta=True)
+                               params=dict(table_name=table_name, schema_name=schema_name),
+                               echo=False, is_meta=True)
 
     def drop_table(self, table_name: str, affirmation: bool = True) -> bool:
         """Drop a table.
 
         :param table_name:
         :param affirmation: if affirmation is not true, it will be done automatically, else you have to affirm.
-        :return bool: returns true if drop successful
+        :return: true if actually dropped
         """
         if affirmation:
             if input('Do you really want to drop table :{}? Please type YES:\n'.format(table_name)) == 'YES':
@@ -70,7 +81,16 @@ class Con2PostgreSQL(Con2Database):
             self.query("DROP TABLE IF EXISTS " + table_name)
             return True
 
-    def insert_row(self, table_name: str, data, echo: bool = None, mode: int = Con2Database.IM_INSERT) -> None:
+    def insert_row(self, table_name: str, params: dict, echo: bool = None, mode: int = Con2Database.IM_INSERT):
+        """Insert a single row into the given table based on a dictionary or named tuple.
+
+        :param table_name: name of the target table
+        :param params: dictionary or tuple or list containing the data
+        :type params: dict | namedtuple
+        :param echo: trigger echo of SQL statement
+        :param mode: IM_INSERT | IM_REPLACE
+        :return: None or new insert ID, depending on implementation
+        """
         raise NotImplemented()
 
     def insert_rows(self, table_name: str, rows, echo: bool = None, mode: int = Con2Database.IM_INSERT) -> None:
@@ -83,5 +103,5 @@ class Con2PostgreSQL(Con2Database):
         """
         super().insert_rows(table_name, rows, echo, mode)
 
-    def _resolve_params_for_output(self, sql_txt: str, params):
+    def _resolve_params_for_output(self, sql_txt: str, params) -> str:
         return self._cursor.mogrify(sql_txt, params).decode("utf-8")

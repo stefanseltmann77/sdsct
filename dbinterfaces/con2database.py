@@ -75,14 +75,17 @@ class Con2Database(object):
         self.close()
 
     @abstractmethod
-    def connect(self, dsn: str, user: str, password: str, host: str, database: str) -> None:
+    def connect(self, dsn: str = None,
+                user: str = None, password: str = None,
+                host: str = None, database: str = None, port: int = None) -> None:
         """Establish a connection to a database
 
-        :param dsn:
-        :param user:
-        :param password:
+        :param dsn: complete dsn string or name
+        :param user: username
+        :param password: password for username
         :param host: ip or address of host
         :param database: name of database schema
+        :param port: port if not default port of db application
         """
 
     @abstractmethod
