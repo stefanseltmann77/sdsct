@@ -7,6 +7,25 @@ from io import StringIO
 from abc import ABCMeta, abstractmethod
 
 
+class SqlResultTable(list):
+    def __init__(self, sql_txt: str, field_names=None, *args, **kwargs):
+        super(SqlResultTable, self).__init__(*args, **kwargs)
+        self.sql_txt = sql_txt
+        self.field_names = field_names
+        self.query_duration = 0  # TODO add content
+        self.query_timestamp = 0  # TODO add content
+
+    def __str__(self):
+        str_output = ""
+        if self.__len__() <= 20:
+            str_output += "\n".join([str(row) for row in self])
+        else:
+            str_output += "\n".join([str(row) for row in self[0:10]])
+            str_output += "\n...\n"
+            str_output += "\n".join([str(row) for row in self[-10:]])
+        return str_output
+
+
 class Con2Database(object):
     """Basic declarative wrapper for database access.
 
@@ -75,13 +94,13 @@ class Con2Database(object):
         :type params: dict | namedtuple
         :param echo: trigger echo of SQL statement
         :param mode: IM_INSERT | IM_REPLACE
-        :return:
+        :return: None or new insert ID, depending on implementation
         """
 
-    def close(self, commit: bool = commit_on_close):
+    def close(self, commit: bool = commit_on_close) -> None:
         """Close all connections and commit, if set by default.
 
-        :param commit:
+        :param commit: whether to issue a commit on closing
         """
         if commit:
             self.commit()
@@ -99,7 +118,7 @@ class Con2Database(object):
         """Perform a rollback on all pending transactions."""
         self.conn.rollback()
 
-    def _execute_query(self, sql_txt: str, params: dict, echo: bool, is_meta: bool):
+    def _execute_query(self, sql_txt: str, params: dict, echo: bool, is_meta: bool) -> None:
         """Internal interface that sends all queries to a database or output buffers.
 
         :param sql_txt: complete query as a string
@@ -108,7 +127,6 @@ class Con2Database(object):
         :param echo: trigger echo of SQL statement
         :param is_meta: when is_meta, then query will be executed always, even in debug or plain text mode.
                         used for queries that provide the metadata for other queries.
-        :return:
         """
         self.params = params  # TODO replace with other solution. is just for mogrify in postgresql
 
@@ -145,15 +163,13 @@ class Con2Database(object):
                     print(sql_txt_output, file=sys.stdout)
                 if self.OS_STRINGIO in self._output_streams:
                     self._query_buffer.write(sql_txt_output + "\n\n")
-            return None
 
-    def _execute(self, sql_txt: str, params):
+    def _execute(self, sql_txt: str, params) -> None:
         """Hook to facilitate customized error message!
 
         :param sql_txt: complete query as a string
         :param params: dictionary or tuple or list containing the data
         :type params: dict | list | tuple
-        :return:
         """
         self._cursor.execute(sql_txt, params)
 
@@ -181,11 +197,11 @@ class Con2Database(object):
         :param echo: trigger echo of SQL statement
         :param is_meta: when is_meta, then query will be executed always, even in debug or plain text mode.
                         used for queries that provide the metadata for other queries.
-        :return:"""
+        :return: None | str | int"""
         self._execute_query(sql_txt, echo=echo, params=params, is_meta=is_meta)  # query_type=self.QT_SELECT,
         result = self._cursor.fetchone() if self._cursor else None
         if result:
-            if len(result) > 1:
+            if len(result) > 1:  # TODO ignore if not strict mode
                 msg_error = "ABORT: For the query of a single value, multiple columns have been detected" \
                             "in the resultset!\n\nQUERY: {}".format(sql_txt)
                 raise Exception(msg_error)
@@ -205,7 +221,7 @@ class Con2Database(object):
         :param is_meta: when is_meta, then query will be executed always, even in debug or plain text mode.
                 used for queries that provide the metadata for other queries.
         :param return_format:
-        :return:
+        :return dict | namedtuple:
         """
         self._execute_query(sql_txt, echo=echo, params=params, is_meta=is_meta)  # query_type=self.QT_SELECT,
         field_names, result = self.get_fields_of_cursor(), self._cursor.fetchone()
@@ -216,7 +232,7 @@ class Con2Database(object):
             return record(*result)
 
     def query_result(self, sql_txt: str, params=None, echo: bool = None, is_meta: bool = False,
-                     return_format: int = RF_NAMEDTUPLE):
+                     return_format: int = RF_NAMEDTUPLE) -> SqlResultTable:
         """Return a multi-row-query as a list of dicts or named tuples
 
         :param sql_txt: complete query as a string
@@ -226,7 +242,6 @@ class Con2Database(object):
         :param is_meta: when is_meta, then query will be executed always, even in debug or plain text mode.
                 used for queries that provide the metadata for other queries.
         :param return_format:
-        :return:
         """
         self._execute_query(sql_txt, echo=echo, params=params, is_meta=is_meta)  # query_type=self.QT_SELECT,
         field_names = self.get_fields_of_cursor()
@@ -239,7 +254,7 @@ class Con2Database(object):
             record = namedtuple('record', field_names)
             return SqlResultTable(sql_txt, field_names, [record(*row) for row in result]) if result else None
 
-    def query_list(self, sql_txt: str, params=None, echo: bool = None, is_meta: bool = False):
+    def query_list(self, sql_txt: str, params=None, echo: bool = None, is_meta: bool = False) -> list:
         """Return a single column query as a list object
 
         :param sql_txt: complete query as a string
@@ -248,7 +263,6 @@ class Con2Database(object):
         :param echo: trigger echo of SQL statement
         :param is_meta: when is_meta, then query will be executed always, even in debug or plain text mode.
                 used for queries that provide the metadata for other queries.
-        :return:
         """
         self._execute_query(sql_txt, echo=echo, params=params, is_meta=is_meta)  # query_type=self.QT_SELECT,
         if self._cursor.rowcount != -1 and self._cursor.rowcount != 0 and self._cursor.rowcount is not None:
@@ -323,7 +337,7 @@ class Con2Database(object):
 
         :param table_name: name of table to be dropped
         :param affirmation: if affirmation is not true, it will be done automatically, else you have to affirm.
-        :return:
+        :return: true if actually dropped
         """
         raise NotImplementedError
 
@@ -380,11 +394,8 @@ class Con2Database(object):
     def _resolve_params_for_output(self, sql_txt: str, params) -> str:
         return sql_txt
 
-    def clear_query_buffer(self):
-        """Resets the query buffer and deletes stored sql-statements
-
-        :return:
-        """
+    def clear_query_buffer(self) -> None:
+        """Resets the query buffer and deletes stored sql-statements"""
         self._query_buffer.truncate(0)
         self._query_buffer.seek(0)
 
@@ -393,7 +404,6 @@ class Con2Database(object):
 
         :param table_name: name of database table, with or without schema_name
         :param schema_name: name of the database
-        :return:
         """
         if not schema_name:
             try:
@@ -409,22 +419,3 @@ class Con2Database(object):
     @query_buffer.setter
     def query_buffer(self, input_buffer):
         raise Exception('Readonly!')
-
-
-class SqlResultTable(list):
-    def __init__(self, sql_txt: str, field_names=None, *args, **kwargs):
-        super(SqlResultTable, self).__init__(*args, **kwargs)
-        self.sql_txt = sql_txt
-        self.field_names = field_names
-        self.query_duration = 0  # TODO add content
-        self.query_timestamp = 0  # TODO add content
-
-    def __str__(self):
-        str_output = ""
-        if self.__len__() <= 20:
-            str_output += "\n".join([str(row) for row in self])
-        else:
-            str_output += "\n".join([str(row) for row in self[0:10]])
-            str_output += "\n...\n"
-            str_output += "\n".join([str(row) for row in self[-10:]])
-        return str_output
