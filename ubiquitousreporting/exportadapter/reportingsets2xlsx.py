@@ -11,7 +11,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 
-class ReportingSets2Xlsx(ReportingSet2ExportFormat):
+class ReportingSets2Xlsx(ReportingSet2Export):
     # def __init__(self, output_directory):
     #     self.title = "Tabellenbandtitel"
     #     self.subtitle = "Tabellenbanduntertitel"
