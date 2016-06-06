@@ -52,3 +52,6 @@ class con2sqlite(Con2Database):
         tbl_description = self.query("Pragma table_info({})".format(table_name), echo=False, is_meta=True)
         return [column[1] for column in tbl_description]
 
+    def query_schema_current(self) -> str:
+        """Query name of current schema or database"""
+        raise NotImplementedError
