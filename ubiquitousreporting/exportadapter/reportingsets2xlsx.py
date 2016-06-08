@@ -68,7 +68,7 @@ class ReportingSets2Xlsx(ReportingSet2Export):
             #                         print(type(head))
             #                         raise Exception("WTF")
             #                 i += 1
-        wb.save('m:/tabband.xlsx')
+        wb.save(self.output_directory + '/' +  output_name + '.xlsx')
 
     #     if output_name[-4:] == ".xls":  # todo auslagern
     #         wb.save(self.outputDir + '/' +  output_name)
