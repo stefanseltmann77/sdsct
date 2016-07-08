@@ -61,8 +61,8 @@ class ReportingSets2Xlsx(ReportingSet2Export):
                     sheet.cell(row=y + 2, column=head_offset).value = column_reporting
                     for code_count, code in enumerate(code_order):
                         dataset_name = headcode if headcode == 'TOTAL' else (head.variables[0] + '_' + str(headcode))
-                        dataset_relevant = reportingset[dataset_name]
                         try:
+                            dataset_relevant = reportingset[dataset_name]
                             value_display = dataset_relevant[column_reporting][code]
                         except KeyError:
                             try:
