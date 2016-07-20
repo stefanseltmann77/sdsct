@@ -445,7 +445,7 @@ class ReportingSet2Tex(ReportingSet2Export):
         string = string.replace('<strong>', '').replace('</strong>', '')
         string = string.replace('$', '\$').replace('%', '\%').replace('_', '\_').replace('&', '\&').replace('"',
                                                                                                             '').replace(
-            '#', '\#').replace('>', '\\textgreater').replace('<', '\\textless')
+            '#', '\#').replace('>', '\\textgreater ').replace('<', '\\textless ')
         return string
 
     def split_head(self, head, reportingColumnCount):
