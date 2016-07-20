@@ -322,6 +322,7 @@ class ReportingSet2Tex(ReportingSet2Export):
                     if self.columns_reporting == ['PCT_GN_W']:
                         datasets[code]['COUNT_TOTAL'] = datasets[code]['COUNT_GN_TOTAL']
                         datasets[code]['COUNT_W_TOTAL'] = datasets[code]['COUNT_GN_W_TOTAL']
+                    # print(datasets.keys())
                     if datasets[code]:
                         count_total = str(locale.format("%.0f", datasets[code]['COUNT_TOTAL'], True))
                     else:
