@@ -147,19 +147,21 @@ class Con2Database(object):
                     if self.OS_STDOUT in self._output_streams:
                         print(sql_txt_output, file=sys.stdout)
                     if self.OS_STRINGIO in self._output_streams:
-                        self._query_buffer.write(sql_txt_output + "\n\n")
+                        self._query_buffer.write(sql_txt_output + "\n")
                 self._execute(sql_txt, params)
 
                 self.records_num = self._cursor.rowcount
-                if sql_txt_output:
+                if sql_txt_output:  # Todo push back due to oracles affected rows bug
                     end_dts = datetime.datetime.now()
-                    sql_txt_footer = "--Affected Rows: {}, Duration: {}, Finished: {}".format(self.records_num,
-                                                                                              str(end_dts - start_dts),
-                                                                                              datetime.datetime.now())
+                    sql_txt_footer = "--Affected Rows: {}, " \
+                                     "Duration: {}, " \
+                                     "Finished: {}\n\n".format(self.records_num,
+                                                               str(end_dts - start_dts),
+                                                               datetime.datetime.now())
                     if self.OS_STDOUT in self._output_streams:
                         print(sql_txt_footer, file=sys.stdout)
                     if self.OS_STRINGIO in self._output_streams:
-                        self._query_buffer.write(sql_txt_footer + "\n\n")
+                        self._query_buffer.write(sql_txt_footer)
         else:
             if sql_txt_output:
                 if self.OS_STDOUT in self._output_streams:
@@ -246,7 +248,7 @@ class Con2Database(object):
                 used for queries that provide the metadata for other queries.
         :param return_format:
         """
-        self._execute_query(sql_txt, echo=echo, params=params, is_meta=is_meta)  # query_type=self.QT_SELECT,
+        self._execute_query(sql_txt, echo=echo, params=params, is_meta=is_meta)
         field_names = self.get_fields_of_cursor()
         result = self._cursor.fetchall()
         if not self.namedtuples_used or return_format == self.RF_DICT:
@@ -385,7 +387,7 @@ class Con2Database(object):
         """
         sql_txt = sql_txt.strip()
         sql_txt = sql_txt + ';' if not sql_txt.endswith(';') else sql_txt
-        sql_txt = '\n'.join([line.strip() for line in sql_txt.split('\n')]) + '\n\n'
+        sql_txt = '\n'.join([line.strip() for line in sql_txt.split('\n')]) + '\n'
         sql_txt = re.sub(' +', ' ', sql_txt)
         sql_txt = sql_txt.replace('\n, ', '\n,    ')
         sql_txt = sql_txt.replace('\nUSING', '\n    USING')
