@@ -21,7 +21,10 @@ class Con2PostgreSQL(Con2Database):
         :param port: port if not default port of db application
         """
         self.conn = psycopg2.connect(host=host, user=user, password=password, database=database, port=port)
-        self._cursor = self.conn.cursor() 
+        self._cursor = self.conn.cursor()
+        print(self._cursor)
+        if not self._cursor:
+            raise Exception("No connection established to {}".host)
 
     def query_schema_table_names(self, schema_name: str = None) -> list:
         """Query the names of all tables of a schema and return them as a list.

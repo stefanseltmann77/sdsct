@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import io
 import sys
 from unittest import TestCase
