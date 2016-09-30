@@ -9,16 +9,18 @@ from sdsct.ubiquitousreporting.dataobjects.report_tab import TabHead, TabReportD
 from sdsct.ubiquitousreporting.dataobjects.report_generic import CodePlan, DataSet, ReportingSet
 from sdsct.dbinterfaces.con2database import Con2Database
 
+
 class ReportingSetBuilder(object):
-    column_types = ('COUNT', 'COUNT_ABS', 'PCT', 'PCT_SUM', 'SUM_ABS', 'AVG_', 'COUNT_W', 'PCT_W', 'SUM_W', 'AVG_W', 'PCT_GN', 'PCT_GN_W')  # TODO: Replace COUNT with COUNT_ABS
+    column_types = ('COUNT', 'COUNT_ABS', 'PCT', 'PCT_SUM', 'SUM_ABS', 'AVG_', 'COUNT_W', 'PCT_W', 'SUM_W', 'AVG_W', 'PCT_GN',
+                    'PCT_GN_W')  # TODO: Replace COUNT with COUNT_ABS
     order_freq_desc = True
-    COUNT_W_TOTAL = 'COUNT_W_TOTAL'   # TODO ???
+    COUNT_W_TOTAL = 'COUNT_W_TOTAL'  # TODO ???
     T_OTHERCODES, T_TOTAL = range(2)
     labels = {T_OTHERCODES: 'Sonstige Werte'}
     categories_number_max = 100
     _caching_mode = None
 
-    def __init__(self, db: Con2Database, database_table: str=None):
+    def __init__(self, db: Con2Database, database_table: str = None):
         """
         :param db: database handle from sdsct
         :param database_table: string for the table to be analyzed
@@ -26,11 +28,11 @@ class ReportingSetBuilder(object):
         """
         self.db = db  # database handle
         self.database_table = database_table  # source data table
-        self.filter_base = None   # global filter for all possible subsplits
-        self.variables_weight = None   # variable used for weighting the data
+        self.filter_base = None  # global filter for all possible subsplits
+        self.variables_weight = None  # variable used for weighting the data
         self.variables_calculation_avg = None
-        self.cases_number_global = None   # global count of cases if custom value is needed
-        self.cases_key = None   # Variable fuer das Identifizieren eines einzelnen Falles XXX???
+        self.cases_number_global = None  # global count of cases if custom value is needed
+        self.cases_key = None  # Variable fuer das Identifizieren eines einzelnen Falles XXX???
         self.result_subsplits = None
         self.echoSql = False
         self.debug_enable = False
@@ -49,7 +51,7 @@ class ReportingSetBuilder(object):
     def log_debug(content):
         logging.debug(content)
 
-    def cache_reportingsets(self, path: str, mode: str='rw') -> None:
+    def cache_reportingsets(self, path: str, mode: str = 'rw') -> None:
         """Cache the computed reportingsets by storing them in the given path
 
         :param path: path to the folder that stores the rs-dumps
@@ -80,17 +82,20 @@ class ReportingSetBuilder(object):
                        "filter": " WHERE ({})".format(filter_string) if filter_string else '',
                        "database_table": self.database_table,
                        "weightVar": self.variables_weight,
-                       "avgInsert": " avg({avg_varName}) AVG , sum({avg_varName}) SUM , ".format(avg_varName=self.variables_calculation_avg) if self.variables_calculation_avg else '',
+                       "avgInsert": " avg({avg_varName}) AVG , sum({avg_varName}) SUM , ".format(
+                           avg_varName=self.variables_calculation_avg) if self.variables_calculation_avg else '',
                        "order": " ORDER BY count(*) DESC, {varName} ASC ".format(varName=variable_name) if self.order_freq_desc else ''}
         if self.cases_key:  # hat mit deduplizierung zu tun.
             insert_dict['source'] = "(SELECT * FROM {database_table} GROUP BY {varName} , {key}) as temp ".format(key=self.cases_key, **insert_dict)
             insert_dict['sourceN'] = "(SELECT * FROM {database_table} {filter} GROUP BY {key}) as temp ".format(key=self.cases_key, **insert_dict)
         else:
             insert_dict['source'] = insert_dict['sourceN'] = self.database_table
-        insert_dict['globalNinsert'] = ", sum({weightVar})*100/ ({globalN})  PCT_GN_W ,  count(*)*100/ ({globalN})  PCT_GN  ".format(globalN=self.cases_number_global, **insert_dict) if self.cases_number_global else ''
+        insert_dict['globalNinsert'] = ", sum({weightVar})*100/ ({globalN})  PCT_GN_W ,  count(*)*100/ ({globalN})  PCT_GN  ".format(
+            globalN=self.cases_number_global, **insert_dict) if self.cases_number_global else ''
         insert_dict['weightInsert'] = """, sum(%(weightVar)s) 'COUNT_W',round(sum(%(weightVar)s)*100/ (SELECT sum(%(weightVar)s)  FROM %(sourceN)s %(filter)s), 10)  PCT_W ,
                     (SELECT sum(%(weightVar)s)  FROM %(sourceN)s %(filter)s) COUNT_W_TOTAL """ % insert_dict if self.variables_weight else ''
-        insert_dict['avgInsert'] = ", avg({avg_varName}) AVG , sum({avg_varName}) SUM  ".format(avg_varName=self.variables_calculation_avg) if self.variables_calculation_avg else ''
+        insert_dict['avgInsert'] = ", avg({avg_varName}) AVG , sum({avg_varName}) SUM  ".format(
+            avg_varName=self.variables_calculation_avg) if self.variables_calculation_avg else ''
         result_query_txt = """
             SELECT
                 {varName} CODE
@@ -108,7 +113,7 @@ class ReportingSetBuilder(object):
         result = self._query_result(result_query_txt, result_base_txt)
         return result, result_query_txt, result_base_txt
 
-    def query_frequ_multi(self, variables, filter_string: str=None):
+    def query_frequ_multi(self, variables, filter_string: str = None):
         """Query the frequencies of multiple columns
 
         :param variables:
@@ -210,7 +215,8 @@ class ReportingSetBuilder(object):
             else:
                 row_count, row_count_weight = self.db.query_resource(query_count_txt, echo=self.echoSql).fetchall()[0]
                 result.append({'CODE': 'OTHER', 'COUNT_TOTAL': row_count, 'COUNT_W_TOTAL': row_count_weight,
-                               'COUNT': (row_count - sum([i['COUNT'] for i in result])), 'COUNT_W': (row_count_weight - sum([i['COUNT'] for i in result]))})
+                               'COUNT': (row_count - sum([i['COUNT'] for i in result])),
+                               'COUNT_W': (row_count_weight - sum([i['COUNT'] for i in result]))})
         return result
 
     def _calc_frequencies(self, variables_calculation, filter_string=None):
@@ -244,14 +250,16 @@ class ReportingSetBuilder(object):
             data = {column: {str(row['CODE']): row[column] for row in result} for column in columns_result}
             if self.variables_weight:
                 data['COUNT_W_TOTAL'] = result[0]['COUNT_W_TOTAL'] if 'COUNT_W_TOTAL' in result[0] else sum(
-                    data['COUNT_W'].values())   # FIXME
+                    data['COUNT_W'].values())  # FIXME
             if self.cases_number_global and self.cases_number_global > 0:
-                data['COUNT_GN_TOTAL'] = data['COUNT_GN_W_TOTAL'] = self.cases_number_global   # FIXME
+                data['COUNT_GN_TOTAL'] = data['COUNT_GN_W_TOTAL'] = self.cases_number_global  # FIXME
                 raise Exception('weight war')
             data['COUNT_TOTAL'] = result[0]['COUNT_TOTAL'] if 'COUNT_TOTAL' in result[0] else sum(data['COUNT'].values())
-            data['PCT'] = {code: data['COUNT'][code] / data['COUNT_TOTAL'] * 100 for code in data['COUNT']} if data['COUNT_TOTAL'] > 0  else None  # #XXXX spaeter?
+            data['PCT'] = {code: data['COUNT'][code] / data['COUNT_TOTAL'] * 100 for code in data['COUNT']} if data[
+                                                                                                                   'COUNT_TOTAL'] > 0  else None  # #XXXX spaeter?
             if self.variables_weight:
-                data['PCT_W'] = {code: data['COUNT_W'][code] / data['COUNT_W_TOTAL'] * 100 for code in data['COUNT']} if data['COUNT_W_TOTAL'] > 0 else None  # #XXXX spaeter?
+                data['PCT_W'] = {code: data['COUNT_W'][code] / data['COUNT_W_TOTAL'] * 100 for code in data['COUNT']} if data[
+                                                                                                                             'COUNT_W_TOTAL'] > 0 else None  # #XXXX spaeter?
             return data
         else:
             self.log_info("No results found.")
@@ -265,13 +273,15 @@ class ReportingSetBuilder(object):
         # if sort == 'COUNT_W_DESC':
         raise Exception('not yet implemented')
 
-    def check_setup(self):
+    def check_setup(self, tabdef):
         """Check the preconditions before starting the calculation"""
-        if not self.database_table:
-            raise Exception("Please define a data_table first. ->database_table")
+        if tabdef.database_table:
+            self.database_table = tabdef.database_table
+        else:
+            raise Exception("No database_table in TabDef defined! ->database_table")
 
-    def build_rs_frequs(self, variables_calculation: list, filter_string: str=None, variables_calculation_avg: list=None, title: str=None,
-                        codeplan: CodePlan=None) -> ReportingSet:
+    def build_rs_frequs(self, variables_calculation: list, filter_string: str = None, variables_calculation_avg: list = None, title: str = None,
+                        codeplan: CodePlan = None) -> ReportingSet:
         """Build a reportingset based on frequencies.
 
         :param variables_calculation:
@@ -280,7 +290,6 @@ class ReportingSetBuilder(object):
         :param title:
         :param codeplan:
         """
-        self.check_setup()
         table_column_names = self.db.query_table_column_names(self.database_table)
         for variable_name in variables_calculation:
             if variable_name not in table_column_names:
@@ -322,7 +331,8 @@ class ReportingSetBuilder(object):
                 """Einfache Kreuztabelle mit Nennung von Kreuzvariable als string. Codes werden aus Bestehendem abgeleitet."""
                 filter_string = " WHERE " + filter_string if filter_string else ""
                 result_split_new = CodePlan()
-                result_split_new.data = self.db.query_list("SELECT " + result_split + " FROM " + self.database_table + filter + " GROUP BY " + result_split, echo=False)
+                result_split_new.data = self.db.query_list(
+                    "SELECT " + result_split + " FROM " + self.database_table + filter + " GROUP BY " + result_split, echo=False)
                 result_split_new.variables = [result_split, ]
                 result_split = result_split_new
             elif isinstance(result_split, CodePlan) and len(result_split) > 0:
@@ -338,10 +348,8 @@ class ReportingSetBuilder(object):
         start_time = datetime.datetime.now()
         tabdef_count = len(tabreport_def)
         tabreport_def.fill_contents_inert()
-        tabdef_counter = 0
-        for tabdef_name in tabreport_def.tabdef_order:
+        for tabdef_counter, tabdef_name in enumerate(tabreport_def.tabdef_order):
             tabdef = tabreport_def[tabdef_name]
-            tabdef_counter += 1
             rs = None
             if self._caching_enabled and self._caching_mode in ('r', 'rw'):
                 rs_dump = "{}/rs_{}.rsd".format(self._cache_directory, tabdef_name)
@@ -349,19 +357,19 @@ class ReportingSetBuilder(object):
                     with open(rs_dump, 'rb') as f:
                         rs = pickle.load(f)
                     logging.info("\t\t{} has been loaded.\t\t{}/{}".format(tabdef_name,
-                                                                           tabdef_counter,
+                                                                           tabdef_counter + 1,
                                                                            tabdef_count))
                 except FileNotFoundError:
                     logging.info("\t\t{} not found in cache.".format(tabdef_name))
 
             if not rs:
                 logging.info("\t\t{} is being calculated.\t\t{}/{}, \t\truntime: {} ".format(tabdef_name,
-                                                                                             tabdef_counter,
+                                                                                             tabdef_counter + 1,
                                                                                              tabdef_count,
                                                                                              str(datetime.datetime.now() - start_time)))
                 self.filter_base = tabdef.filter_rs if tabdef.filter_rs else None
                 if tabdef.table_head:
-                    self.result_subsplits = []      # TODO warum self, warum nicht local
+                    self.result_subsplits = []  # TODO warum self, warum nicht local
                     for head in tabdef.table_head:
                         if isinstance(head, TabHead):
                             for subhead in head:
@@ -370,10 +378,7 @@ class ReportingSetBuilder(object):
                             self.result_subsplits.append(head)
                         else:
                             raise TypeError('Only TabHead or CodePlan allowed as a table head. Found: ', type(head))
-                if tabdef.database_table:
-                    self.database_table = tabdef.database_table
-                else:
-                    raise Exception("No database_table in TabDef defined!")
+                self.check_setup(tabdef)
                 if tabdef.aggr_variables:
                     self.variables_calculation_avg = tabdef.aggr_variables[0]  # unclear?
                 rs = self.build_rs_frequs(variables_calculation=tabdef.variables, variables_calculation_avg=self.variables_calculation_avg)
@@ -390,3 +395,4 @@ class ReportingSetBuilder(object):
                     f.close()
             tabdef.reportingset = rs
         self.log_info("Tabreport calculated. Duration: {}".format(str(datetime.datetime.now() - start_time)))
+
