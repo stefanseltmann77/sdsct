@@ -322,8 +322,7 @@ class ReportingSet2Tex(ReportingSet2Export):
                     if self.columns_reporting == ['PCT_GN_W']:
                         datasets[code]['COUNT_TOTAL'] = datasets[code]['COUNT_GN_TOTAL']
                         datasets[code]['COUNT_W_TOTAL'] = datasets[code]['COUNT_GN_W_TOTAL']
-                    # print(datasets.keys())
-                    if datasets[code]:
+                    if code in datasets and datasets[code]:
                         count_total = str(locale.format("%.0f", datasets[code]['COUNT_TOTAL'], True))
                     else:
                         count_total = str(0)
@@ -541,8 +540,7 @@ class ReportingSet2Tex(ReportingSet2Export):
                             if isinstance(head, CodePlan) or (isinstance(head, TabHead) and head.is_subhead):
                                 tex += self._build_table_tex(tabdef.reportingset, head)
                             else:
-                                print(type(head))  # TODO ausbessern
-                                raise Exception("WTF")
+                                raise Exception("???")
                         else:
                             head_new = self.split_head(head, len(self.columns_reporting))
                             for subhead in head_new:  # # neue list comp
@@ -553,9 +551,7 @@ class ReportingSet2Tex(ReportingSet2Export):
                                 elif type(subhead) == CodePlan:
                                     tex += self._build_table_tex(tabdef.reportingset, head)
                                 else:
-                                    print(subhead)
-                                    print(type(subhead))  # TODO ausbessern
-                                    raise Exception('WTF')
+                                    raise Exception('???')
                 else:
                     tex += self._build_table_tex(tabdef.reportingset)
                     # Test fuer trennseite:
@@ -595,20 +591,11 @@ class ReportingSet2Tex(ReportingSet2Export):
             print(" Tex run {}".format(i))
             os.system("pdflatex {}.tex ".format(output_name))
 
-        # #aufraeumen
         os.system(r"del *.aux ")
         os.system(r"del *.log ")
         os.system(r"del *.lot ")
         # os.system(r"del *.tex ")
         os.system(r"del *.out ")
-
-        # os.system(r"latex table.tex ")
-        # os.system(r"latex table.tex ")
-        # os.system(r"dvips -t landscape  table.dvi ")
-        # os.system(r"dvips table.dvi ")
-        # os.system(r"ps2pdf  table.ps ")
-        # os.system(r"ps2pdf -sPAPERSIZE#a4 -dOptimize#true -dEmbedAllFonts#true  table.ps ")
-        # os.system(self.outputName)
 
 
 class TexPackage(object):
