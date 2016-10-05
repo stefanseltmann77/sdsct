@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 # Written for Python 3.4
 import csv
-from sdsct.exportadapter.Python2Exportfile import Python2Exportfile
+from sdsct.exportadapter.export2generic import Export2Generic
 # TODO: use csv
 
-class Python2txt(Python2Exportfile):
+class Export2Csv(Export2Generic):
 
-    file_name = 'python2txt.txt'
+    file_name = 'python2cxt.csv'
     delimiter_default = '\t'
     file_name_default_extension = 'txt'  # TODO: use if no extension given.
     header_included = True

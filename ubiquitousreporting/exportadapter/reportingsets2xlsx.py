@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
 from sdsct.ubiquitousreporting.dataobjects.report_generic import CodePlan
 from sdsct.ubiquitousreporting.dataobjects.report_tab import TabHead
 from sdsct.ubiquitousreporting.dataobjects.report_tab import TabReportDef
 from sdsct.ubiquitousreporting.dataobjects.report_tab import TabDef
 from sdsct.ubiquitousreporting.exportadapter.reportingset2export import ReportingSet2Export
-import openpyxl
 from openpyxl.workbook import Workbook
 import logging
-
-logging.basicConfig(level=logging.INFO)
 
 
 class ReportingSets2Xlsx(ReportingSet2Export):
 
     file_extension = ".xlsx"
 
-    def export_tabreport(self, tabreport: TabReportDef, output_name='tabband', testmode=False):
+    def export_tabreport(self, tabreport: TabReportDef, output_name='tabband', testmode=False) -> None:
+        """Export a precalculated table report to the specific outputformat.
+
+        :param tabreport:
+        :param output_name:
+        :param testmode:
+        """
         logging.info('EXPORT tabreport to XLSX')
         wb = Workbook()
         sheet = wb.active
@@ -46,9 +48,7 @@ class ReportingSets2Xlsx(ReportingSet2Export):
         # plot code labels
         code_order = reportingset.split_main.key_order
         for code_count, code in enumerate(code_order):
-            print(tabdef.reportingset.split_main.keys())
             code_label = tabdef.reportingset.split_main[str(int(code))]
-
             sheet.cell(column=x, row=y + height_of_header + code_count).value = code_label
 
         # plot headers
@@ -61,8 +61,8 @@ class ReportingSets2Xlsx(ReportingSet2Export):
                     sheet.cell(row=y + 2, column=head_offset).value = column_reporting
                     for code_count, code in enumerate(code_order):
                         dataset_name = headcode if headcode == 'TOTAL' else (head.variables[0] + '_' + str(headcode))
+                        dataset_relevant = reportingset[dataset_name]
                         try:
-                            dataset_relevant = reportingset[dataset_name]
                             value_display = dataset_relevant[column_reporting][code]
                         except KeyError:
                             try:

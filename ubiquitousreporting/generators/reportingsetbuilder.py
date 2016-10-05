@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
+from abc import ABCMeta, abstractmethod
 import copy
 import logging
 import operator
@@ -7,7 +7,6 @@ import datetime
 import pickle
 from sdsct.ubiquitousreporting.dataobjects.report_tab import TabHead, TabReportDef, TabDef
 from sdsct.ubiquitousreporting.dataobjects.report_generic import CodePlan, DataSet, ReportingSet
-from sdsct.dbinterfaces.con2database import Con2Database
 
 
 class ReportingSetBuilder(object):
@@ -20,14 +19,7 @@ class ReportingSetBuilder(object):
     categories_number_max = 100
     _caching_mode = None
 
-    def __init__(self, db: Con2Database, database_table: str = None):
-        """
-        :param db: database handle from sdsct
-        :param database_table: string for the table to be analyzed
-        : return:
-        """
-        self.db = db  # database handle
-        self.database_table = database_table  # source data table
+    def __init__(self):
         self.filter_base = None  # global filter for all possible subsplits
         self.variables_weight = None  # variable used for weighting the data
         self.variables_calculation_avg = None
@@ -280,6 +272,7 @@ class ReportingSetBuilder(object):
         else:
             raise Exception("No database_table in TabDef defined! ->database_table")
 
+    @abstractmethod
     def build_rs_frequs(self, variables_calculation: list, filter_string: str = None, variables_calculation_avg: list = None, title: str = None,
                         codeplan: CodePlan = None) -> ReportingSet:
         """Build a reportingset based on frequencies.
@@ -290,33 +283,7 @@ class ReportingSetBuilder(object):
         :param title:
         :param codeplan:
         """
-        table_column_names = self.db.query_table_column_names(self.database_table)
-        for variable_name in variables_calculation:
-            if variable_name not in table_column_names:
-                raise Exception("Variable '{}' not found in {}!".format(variable_name, self.database_table))
-        self.variables_calculation_avg = variables_calculation_avg  # XXX umbenennen
-        rs = ReportingSet(title=title)
-        rs['TOTAL'] = self._calc_frequencies(variables_calculation=variables_calculation, filter_string=filter_string)
-        if codeplan:
-            rs.split_main = codeplan
-            rs.split_main.key_order + [key for key in rs['TOTAL']['COUNT'] if key not in codeplan]  # # Add missing codes
-            keys_sorted = None
-        else:
-            if len(rs['TOTAL']) > 0:
-                rs.split_main.data = list(rs['TOTAL']['COUNT'].keys())
-                keys_sorted = None
-                if self.order_freq_desc:
-                    keys_sorted = sorted(copy.copy(rs['TOTAL']['COUNT']).items(), key=operator.itemgetter(1))
-                    keys_sorted.reverse()
-                    rs.split_main.key_order = [chunk[0] for chunk in keys_sorted]
-                    if 'OTHER' in rs.split_main.key_order:
-                        rs.split_main.key_order.remove('OTHER')
-                        rs.split_main.key_order.append('OTHER')
-                rs.split_main.variables = variables_calculation
-        if self.result_subsplits:
-            self.calc_splits_sub(rs, filter_string, variables_calculation)
-        rs.timestamp = datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-        return rs
+        raise NotImplementedError()
 
     def calc_splits_sub(self, rs: ReportingSet, filter_string: str, variables_calculation):
         """calculation of dataset crossed with a codeplan, similar to a crosstable.
@@ -344,7 +311,9 @@ class ReportingSetBuilder(object):
                     rs.splits_sub[result_split.variables[0]] = copy.copy(result_split)
 
     def compute_reportingsets_for_tabreportdef(self, tabreport_def: TabReportDef):
-        """Augment the definition of a table report with calculated ReportingSets."""
+        """Augment the definition of a table report with calculated ReportingSets.
+
+        Generic for all rsbuilder"""
         start_time = datetime.datetime.now()
         tabdef_count = len(tabreport_def)
         tabreport_def.fill_contents_inert()
@@ -363,13 +332,14 @@ class ReportingSetBuilder(object):
                     logging.info("\t\t{} not found in cache.".format(tabdef_name))
 
             if not rs:
-                logging.info("\t\t{} is being calculated.\t\t{}/{}, \t\truntime: {} ".format(tabdef_name,
-                                                                                             tabdef_counter + 1,
-                                                                                             tabdef_count,
-                                                                                             str(datetime.datetime.now() - start_time)))
+                logging.info("\t\t{} is being calculated.\t\t{}/{}, "
+                             "\t\truntime: {} ".format(tabdef_name,
+                                                       tabdef_counter + 1,
+                                                       tabdef_count,
+                                                       str(datetime.datetime.now() - start_time)))
                 self.filter_base = tabdef.filter_rs if tabdef.filter_rs else None
                 if tabdef.table_head:
-                    self.result_subsplits = []  # TODO warum self, warum nicht local
+                    self.result_subsplits = []  # TODO why self and not local
                     for head in tabdef.table_head:
                         if isinstance(head, TabHead):
                             for subhead in head:
@@ -381,7 +351,8 @@ class ReportingSetBuilder(object):
                 self.check_setup(tabdef)
                 if tabdef.aggr_variables:
                     self.variables_calculation_avg = tabdef.aggr_variables[0]  # unclear?
-                rs = self.build_rs_frequs(variables_calculation=tabdef.variables, variables_calculation_avg=self.variables_calculation_avg)
+                rs = self.build_rs_frequs(variables_calculation=tabdef.variables,
+                                          variables_calculation_avg=self.variables_calculation_avg)
                 if tabdef.split_main:
                     rs.split_main = tabdef.split_main
                     rs.split_main.variables = tabdef.variables
@@ -395,4 +366,3 @@ class ReportingSetBuilder(object):
                     f.close()
             tabdef.reportingset = rs
         self.log_info("Tabreport calculated. Duration: {}".format(str(datetime.datetime.now() - start_time)))
-

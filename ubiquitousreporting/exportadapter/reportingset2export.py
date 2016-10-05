@@ -74,12 +74,11 @@ class ReportingSet2Export(object):
         self._decimals = value
 
     @abstractmethod
-    def export_tabreport(self, tabreport: TabReportDef, output_name: str='tabband', testmode: bool=False):
+    def export_tabreport(self, tabreport: TabReportDef, output_name: str='tabband', testmode: bool=False) -> None:
         """Export a precalculated table report to the specific outputformat.
 
         :param tabreport:
         :param output_name:
         :param testmode:
-        :return:
         """
-        pass
+        raise NotImplementedError()

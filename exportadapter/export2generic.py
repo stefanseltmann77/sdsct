@@ -4,7 +4,7 @@ import os
 from abc import ABCMeta, abstractmethod
 
 
-class Python2Exportfile(object):
+class Export2Generic(object):
     """Generic class for exports to files"""
     __metaclass__ = ABCMeta
     
@@ -24,7 +24,9 @@ class Python2Exportfile(object):
 
     @staticmethod
     def _clean_path(path: str) -> str:
-        return path.replace('\\', '/').strip('/')
+        """convert backslashes to slashes and strip any trailing slashes"""
+        path = path.replace('\\', '/')
+        return path.strip('/') if not path.endswith(':/') else path
 
     @staticmethod
     def _get_timestamp_string() -> str:
