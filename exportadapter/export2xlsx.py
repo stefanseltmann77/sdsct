@@ -8,7 +8,7 @@ from sdsct.exportadapter.export2generic import Export2Generic
 
 class Export2xlsx(Export2Generic):
 
-    def export(self, result, file_name: str="pythonexport.exp", result_title: str='table'):
+    def export(self, result, file_name: str="pythonexport.xlsx", result_title: str='table'):
         """
 
         :param result:
@@ -25,7 +25,12 @@ class Export2xlsx(Export2Generic):
         sheet = wb.get_sheet_by_name('Sheet')
         sheet.title = result_title
         sheet.append(column_names)
-        for row in result:
-            row = [element if not isinstance(element, set) else None for element in row]
-            sheet.append(row)
+        if isinstance(result[0], dict):
+            for row in result:
+                tmp_row = [row[colname] for colname in column_names]
+                sheet.append(tmp_row)
+        else:
+            for row in result:
+                row = [element if not isinstance(element, set) else None for element in row]
+                sheet.append(row)
         wb.save(filename=self.output_directory+os.sep+file_name)
