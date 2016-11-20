@@ -32,13 +32,13 @@ class ReportingSets2Xlsx(ReportingSet2Export):
         wb.save(self.output_directory + os.sep + output_name + self.file_extension)
         logging.info('EXPORT tabreport to XLSX finished')
 
-    def plot_tabdef(self, tabdef: TabDef, sheet, x, y, head: TabHead = None):
+    def plot_tabdef(self, tabdef: TabDef, sheet, x, y):
         height_of_header = 3
-        sheet.cell(row=y, column=x).value = tabdef.title or tabdef.name  ## fixme push to tabdef.
+        sheet.cell(row=y, column=x).value = tabdef.title or tabdef.name # FIXME push to tabdef.
         reportingset = tabdef.reportingset
         tabhead_xlsx = TabHead()
         tabhead_xlsx.append(CodePlan(name='TOTAL', data=['TOTAL']))
-        for head in tabdef.table_head:
+        for head in tabdef.table_head or TabHead():
             if isinstance(head, TabHead):
                 for cp in head:
                     tabhead_xlsx.append(cp)
@@ -48,7 +48,12 @@ class ReportingSets2Xlsx(ReportingSet2Export):
         # plot code labels
         code_order = reportingset.split_main.key_order
         for code_count, code in enumerate(code_order):
-            code_label = tabdef.reportingset.split_main[str(int(code))]
+            print(tabdef.reportingset.split_main.keys())
+            try:
+                code_label = tabdef.reportingset.split_main[str(int(code))]
+            except:
+                code_label = tabdef.reportingset.split_main[int(code)]
+
             sheet.cell(column=x, row=y + height_of_header + code_count).value = code_label
 
         # plot headers
