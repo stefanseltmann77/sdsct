@@ -13,13 +13,13 @@ class TabDef(object):
     reportingset = None
 
     def __init__(self, name: str, title: str = None, split_main: CodePlan = None, variables=None,
-                 database_table: str = None, table_head=None, aggr_variables=None, reporting_columns=None,
-                 filter_rs=None, section=None, database_table_linked=None, title_sub: str=None):
+                 data_source: str = None, database_table: str = None, table_head=None, aggr_variables=None,
+                 reporting_columns=None, filter_rs=None, section=None, database_table_linked=None, title_sub: str=None):
         """
         :param name:
         :param title:
         :param split_main:
-        :param database_table:
+        :param database_table: TODO Deprecated and has to be replaced by data_source
         :param variables:
         :param table_head:
         :type table_head: TabHead
@@ -36,6 +36,7 @@ class TabDef(object):
         self.title = title
         self.split_main = split_main
         self.database_table = database_table
+        self.data_source = data_source or database_table
         self.title_sub = title_sub
         if variables:
             self.variables = variables
@@ -78,7 +79,7 @@ class TabDef(object):
 class TabReportDef(dict):
     """Collection Object, containing the different crosstab definitions of a tabular report."""
 
-    _keys_inert = ('table_head', 'database_table', 'aggregation_variables', 'reporting_columns')
+    _keys_inert = ('table_head', 'database_table', 'data_source', 'aggregation_variables', 'reporting_columns')
 
     def __init__(self, title: str='TabReport', title_sub: str=None, footer: str=None, title_pre: str=None) -> None:
         """
@@ -147,7 +148,7 @@ class TabReportDef(dict):
         """Set the given value as a inert setting for all following tabledefs
 
         This method is used e.g. for setting a global filter or table heads.
-        :param args: key->value pairs of values to set for example 'table_head', 'database_table'
+        :param args: key->value pairs of values to set for example 'table_head', 'data_source', 'database_table'
                      or 'aggregation_variables', 'reporting_columns'
         :return:
         """
