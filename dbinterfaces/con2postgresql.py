@@ -22,7 +22,6 @@ class Con2PostgreSQL(Con2Database):
         """
         self.conn = psycopg2.connect(host=host, user=user, password=password, database=database, port=port)
         self._cursor = self.conn.cursor()
-        print(self._cursor)
         if not self._cursor:
             raise Exception("No connection established to {}".format(host))
 
