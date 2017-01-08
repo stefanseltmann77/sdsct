@@ -39,10 +39,6 @@ class con2mysql(Con2Database): #XXX abstract class
         raise DeprecationWarning
         return self.query_primaryKey(tableName)
 
-    ###XXX decorator für tablename check einbaucen
-    def query_tableColumns(self, tableName):
-        return self.query_result("SELECT * FROM information_schema.`COLUMNS` WHERE table_schema = %s and table_name = %s", values= tableName.split('.'))
-
     def schema_exists(self, schemaName):
         """Checks the existence of a schema in the metadata of the db-server"""
         if self.query_value("SELECT count(*) FROM information_schema.schemata WHERE schema_name = '{}'".format(schemaName), echo = False)==0:
