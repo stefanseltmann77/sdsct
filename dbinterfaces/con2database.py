@@ -62,7 +62,7 @@ class Con2Database(object):
     """Cursor object, provided by the system specific module."""
     conn = None
     """Connection object, provided by the system specific module."""
-    records_num = 0
+    records_num = -1
     """contains the number of affected records of the latest query"""
     _records_affected_minimum = -1  # TODO implement check on minimum affected rows
     """if set to a number > 0 it can be used to check whether queries run empty or with to few rows."""
