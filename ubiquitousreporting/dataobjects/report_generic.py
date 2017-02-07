@@ -94,7 +94,7 @@ class CodePlan(dict):
                 self.key_order.sort()
                 raise Exception()
             for key in self.key_order:  # TODO alle fehlenden ausweisen.
-                if str(key) not in self or key not in self:
+                if str(key) not in self and key not in self:
                     raise Exception("Codeplan '{}' misses elements from key_order! Key : {} \n!".format(self.title, str(key)))
 
     def __str__(self):

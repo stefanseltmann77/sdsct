@@ -211,30 +211,6 @@ class ReportingSetBuilder(object):
                                'COUNT_W': (row_count_weight - sum([i['COUNT'] for i in result]))})
         return result
 
-    def _calc_frequencies(self, variables_calculation, filter_string=None):
-        """dispatch required variables to adequate frequ function"""
-        if self.filter_base:
-            filter_string = "({}) and ({})".format(filter_string, self.filter_base) if filter_string else self.filter_base
-        if len(variables_calculation) == 1:
-            result, result_query_txt, county_query_txt = self.query_frequ_single(variables_calculation[0], filter_string)
-            result = self._transform_grouping(result)
-            if result and result is not None:  # XXX why both
-                result = DataSet(result)
-                result.sql_result_str = result_query_txt
-            else:
-                result = DataSet()
-                result.sql_result_str = result_query_txt
-        else:
-            result, result_query_txt, county_query_txt = self.query_frequ_multi(variables_calculation, filter_string)
-            result = self._transform_grouping(result)
-            if result and result is not None:  # XXX why both
-                result = DataSet(result)
-                result.sql_result_str = result_query_txt
-            else:
-                result = DataSet()
-                result.sql_result_str = result_query_txt
-        return result
-
     def _transform_grouping(self, result):
         """Transpose results to a structure ordered by codes"""
         if result:

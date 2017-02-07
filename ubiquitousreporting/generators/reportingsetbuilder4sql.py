@@ -4,7 +4,7 @@ import copy
 import datetime
 import operator
 from sdsct.ubiquitousreporting.dataobjects.report_tab import TabDef
-from sdsct.ubiquitousreporting.dataobjects.report_generic import CodePlan, ReportingSet
+from sdsct.ubiquitousreporting.dataobjects.report_generic import CodePlan, ReportingSet, DataSet
 from sdsct.ubiquitousreporting.generators.reportingsetbuilder import ReportingSetBuilder
 from sdsct.dbinterfaces.con2database import Con2Database
 
@@ -69,4 +69,29 @@ class ReportingSetBuilder4SQL(ReportingSetBuilder):
             self.calc_splits_sub(rs, filter_string, variables_calculation)
         rs.timestamp = datetime.datetime.now().strftime('%d.%m.%Y %H:%M:%S')
         return rs
+
+    def _calc_frequencies(self, variables_calculation, filter_string=None):
+        """dispatch required variables to adequate frequ function"""
+        if self.filter_base:
+            filter_string = "({}) and ({})".format(filter_string, self.filter_base) if filter_string else self.filter_base
+        if len(variables_calculation) == 1:
+            result, result_query_txt, county_query_txt = self.query_frequ_single(variables_calculation[0], filter_string)
+            result = self._transform_grouping(result)
+            if result and result is not None:  # XXX why both
+                result = DataSet(result)
+                result.sql_result_str = result_query_txt
+            else:
+                result = DataSet()
+                result.sql_result_str = result_query_txt
+        else:
+            result, result_query_txt, county_query_txt = self.query_frequ_multi(variables_calculation, filter_string)
+            result = self._transform_grouping(result)
+            if result and result is not None:  # XXX why both
+                result = DataSet(result)
+                result.sql_result_str = result_query_txt
+            else:
+                result = DataSet()
+                result.sql_result_str = result_query_txt
+        return result
+
 
